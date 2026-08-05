@@ -1,0 +1,520 @@
+/**
+ * Plugin SVM - Pesquisa de satisfação
+ * Estilos do modal e da tela de configuração.
+ */
+
+/*
+ * Sem @import de fonte externa: este CSS é carregado em toda página do GLPI
+ * e uma requisição ao Google Fonts falharia em intranet/offline, além de
+ * implicar transferência de dados a terceiros.
+ */
+
+/* ===================== OVERLAY ===================== */
+#svm-full-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    z-index: 10000; display: flex; align-items: center; justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                 'Helvetica Neue', Arial, sans-serif;
+    padding: 20px;
+}
+
+/* Modo "reminder": menos intrusivo */
+#svm-full-overlay.svm-soft { background: rgba(15, 23, 42, 0.28); }
+
+.svm-glass-container {
+    position: relative;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 28px; padding: 30px 40px;
+    width: 100%; max-width: 650px;
+    max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    display: flex; flex-direction: column;
+    animation: svmSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.svm-glass-container::-webkit-scrollbar { width: 6px; }
+.svm-glass-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+.svm-glass-container::-webkit-scrollbar-thumb:hover { background: #f97316; }
+
+/* Botão de dispensar (só nos modos não bloqueantes) */
+.svm-dismiss-btn {
+    position: absolute; top: 14px; right: 16px;
+    width: 30px; height: 30px; border: none; border-radius: 50%;
+    background: #f1f5f9; color: #64748b; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: 0.2s; z-index: 2;
+}
+.svm-dismiss-btn:hover { background: #e2e8f0; color: #1e293b; }
+
+/* ===================== CABEÇALHO ===================== */
+.svm-header h2 { color: #1e293b; font-weight: 600; font-size: 21px; margin: 0; text-align: center; }
+.svm-header p  { font-size: 13px; color: #64748b; text-align: center; margin: 5px 0 25px; }
+
+.svm-instr { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 12px; }
+
+/* ===================== ETAPA 1: SELEÇÃO ===================== */
+.svm-ticket-card {
+    background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px;
+    padding: 15px 20px; margin-bottom: 12px; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
+}
+.svm-ticket-card:hover { border-color: #f97316; background: #fff7ed; transform: translateY(-2px); }
+.svm-ticket-info { font-size: 13px; color: #334155; }
+.svm-arrow-go { color: #f97316; }
+
+/* ===================== NAVBAR MINI ===================== */
+.svm-navbar-mini {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(241, 245, 249, 0.8); padding: 8px 16px; border-radius: 50px;
+    margin-bottom: 20px; border: 1px solid #e2e8f0;
+}
+#svm-id-display { font-size: 13px; font-weight: 600; color: #475569; }
+
+.svm-icon-btn {
+    border: none; background: #f1f5f9; color: #64748b;
+    width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.svm-icon-btn:hover { background: #e2e8f0; color: #1e293b; transform: translateY(-1px); }
+
+.svm-icon-btn.orange {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    color: #fff; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
+}
+.svm-icon-btn.orange:hover {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    transform: scale(1.1); box-shadow: 0 6px 15px rgba(249, 115, 22, 0.4);
+}
+.svm-icon-btn.orange.active { background: #475569; box-shadow: none; transform: rotate(90deg); }
+
+/* ===================== PRÉVIA DO CHAMADO ===================== */
+#svm-quick-view {
+    width: 100%; height: 350px; border-radius: 16px;
+    border: 1px solid #e2e8f0; margin-bottom: 20px; overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+#svm-preview-frame { width: 100%; height: 100%; border: none; }
+
+/* ===================== PERGUNTAS ===================== */
+.svm-row {
+    margin-bottom: 18px; padding: 10px; border-radius: 15px;
+    transition: 0.3s; border: 1px solid transparent;
+}
+.svm-row label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: #475569; margin-bottom: 6px;
+}
+.svm-required { color: #ef4444; margin-left: 4px; font-weight: 700; }
+
+.svm-hint {
+    display: block; font-size: 11px; color: #94a3b8; margin-bottom: 8px;
+}
+.svm-hint.svm-warn { color: #ea580c; font-weight: 600; }
+
+/* --- Escala genérica --- */
+.svm-scale {
+    display: flex; gap: 10px; justify-content: center;
+    align-items: center; flex-wrap: wrap;
+}
+.svm-scale-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #94a3b8; margin-top: 6px; padding: 0 4px;
+}
+
+.svm-point {
+    cursor: pointer; line-height: 1;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s, opacity 0.2s;
+    user-select: none;
+}
+.svm-point:focus-visible { outline: 2px solid #f97316; outline-offset: 3px; border-radius: 8px; }
+.svm-point:hover { transform: scale(1.12); }
+
+/* Emoji / caractere */
+.svm-emoji-on, .svm-emoji-off { font-size: 30px; display: inline-block; }
+.svm-emoji-on  { display: none; }
+.svm-emoji-off { filter: grayscale(1); opacity: 0.25; }
+.svm-point.active .svm-emoji-on  { display: inline-block; }
+.svm-point.active .svm-emoji-off { display: none; }
+.svm-point.active { transform: scale(1.08); }
+
+/* Font Awesome */
+.svm-fa-on, .svm-fa-off { font-size: 26px; }
+.svm-fa-on  { display: none; color: #f97316; }
+.svm-fa-off { color: #cbd5e1; }
+.svm-point.active .svm-fa-on  { display: inline-block; }
+.svm-point.active .svm-fa-off { display: none; }
+
+/* Imagem */
+.svm-img-on, .svm-img-off { height: 34px; width: auto; }
+.svm-img-on  { display: none; }
+.svm-img-off { filter: grayscale(1); opacity: 0.3; }
+.svm-point.active .svm-img-on  { display: inline-block; }
+.svm-point.active .svm-img-off { display: none; }
+
+/* Números — escopado ao ponto da escala: o painel de indicadores também
+   usa .svm-num em <td>, e um display:inline-flex ali quebraria a tabela. */
+.svm-point .svm-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 8px;
+    border-radius: 10px; border: 1.5px solid #e2e8f0;
+    background: #f8fafc; color: #64748b;
+    font-size: 14px; font-weight: 600; transition: 0.2s;
+}
+.svm-point.active .svm-num {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    border-color: #f97316; color: #fff;
+}
+
+/* --- Sequência: um ícone por nota (escala de carinhas) --- */
+.svm-scale-seq { gap: 14px; }
+
+.svm-emoji-seq {
+    font-size: 32px; display: inline-block;
+    filter: grayscale(1); opacity: 0.45;
+    transition: filter 0.2s, opacity 0.2s, transform 0.2s;
+}
+.svm-point-seq:hover .svm-emoji-seq { filter: grayscale(0); opacity: 0.8; }
+.svm-point-seq.active .svm-emoji-seq {
+    filter: grayscale(0); opacity: 1; transform: scale(1.2);
+}
+
+.svm-fa-seq {
+    font-size: 28px; color: #cbd5e1;
+    transition: color 0.2s, transform 0.2s;
+}
+.svm-point-seq:hover .svm-fa-seq { color: #94a3b8; }
+.svm-point-seq.active .svm-fa-seq { color: #f97316; transform: scale(1.15); }
+
+/* Sim / Não */
+.svm-bool { gap: 24px; }
+.svm-bool .svm-point { font-size: 30px; filter: grayscale(1); opacity: 0.3; }
+.svm-bool .svm-point.active { filter: grayscale(0); opacity: 1; }
+
+/* NPS 0-10 */
+.svm-nps { gap: 5px; }
+.svm-nps .svm-num { min-width: 30px; height: 30px; font-size: 13px; border-radius: 8px; }
+.svm-row-nps {
+    background: #f8fafc; border: 1px solid #e2e8f0 !important;
+    padding: 14px; border-radius: 16px; margin-top: 6px;
+}
+
+/* ===================== COMENTÁRIO E AÇÕES ===================== */
+.svm-comment-block { margin-top: 16px; }
+
+#svm-full-overlay textarea, .svm-text-input {
+    width: 100%; border-radius: 16px; border: 1.5px solid #e2e8f0;
+    padding: 14px; font-size: 13px; background: #f8fafc;
+    resize: vertical; transition: all 0.2s; font-family: inherit;
+}
+#svm-comment { height: 80px; }
+#svm-full-overlay textarea:focus, .svm-text-input:focus {
+    outline: none; border-color: #f97316; background: #fff;
+}
+#svm-full-overlay textarea.svm-attention {
+    border: 2px solid #ef4444 !important; background: #fff1f2 !important;
+    animation: svmShake 0.4s ease-in-out;
+}
+
+.svm-actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
+
+#svm-btn {
+    flex: 1; background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff; border: none; padding: 15px; border-radius: 18px;
+    font-weight: 600; font-size: 15px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); transition: all 0.2s;
+}
+#svm-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(234, 88, 12, 0.4); }
+#svm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.svm-btn-secondary {
+    background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+    padding: 14px 18px; border-radius: 18px; font-size: 13px;
+    cursor: pointer; transition: 0.2s; white-space: nowrap;
+}
+.svm-btn-secondary:hover { background: #e2e8f0; }
+
+/* ===================== ALERTAS ===================== */
+#svm-justify-alert {
+    background: #fff7ed; border-radius: 14px; padding: 12px 14px;
+    border: 1px solid #fed7aa; margin-bottom: 16px;
+    display: flex; gap: 10px; align-items: center;
+}
+.svm-justify-icon { font-size: 22px; line-height: 1; }
+#svm-justify-alert p { font-size: 12px; color: #c2410c; font-weight: 500; margin: 0; }
+
+.svm-error {
+    background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+    padding: 10px 14px; margin-top: 14px;
+    font-size: 12px; color: #b91c1c; font-weight: 500;
+}
+
+/* ===================== AGRADECIMENTO ===================== */
+.svm-thanks { text-align: center; padding: 20px 0; }
+.svm-thanks h3 { color: #ea580c; margin-top: 15px; font-weight: 600; }
+.svm-thanks p  { color: #64748b; font-size: 14px; margin-top: 10px; }
+
+.svm-success-icon {
+    font-size: 60px; margin-bottom: 10px;
+    animation: svmPulse 1.5s infinite; display: inline-block;
+}
+.svm-loader-bar {
+    width: 100%; height: 4px; background: #f1f5f9; border-radius: 10px;
+    margin-top: 25px; overflow: hidden; position: relative;
+}
+.svm-loader-bar::after {
+    content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0;
+    background: #f97316; animation: svmLoad 8s linear forwards;
+}
+
+.svm-btn-close-manual {
+    background: #1e293b; color: #fff; border: none; padding: 12px 25px;
+    border-radius: 50px; font-size: 13px; margin-top: 24px; cursor: pointer; transition: 0.3s;
+}
+.svm-btn-close-manual:hover { background: #0f172a; transform: translateY(-2px); }
+
+.svm-footer-note {
+    font-size: 10px; color: #94a3b8; text-align: center;
+    margin-top: auto; padding-top: 20px;
+}
+.svm-no-scroll { overflow: hidden !important; }
+
+/* ===================== ANIMAÇÕES ===================== */
+@keyframes svmSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes svmPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.12); filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.4)); }
+    100% { transform: scale(1); }
+}
+@keyframes svmBlink {
+    0%, 100% { border-color: transparent; }
+    50%      { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+}
+@keyframes svmLoad  { to { width: 100%; } }
+@keyframes svmShake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-5px); }
+    75%      { transform: translateX(5px); }
+}
+
+.svm-row.svm-attention {
+    animation: svmBlink 0.8s ease-in-out infinite;
+    border: 1px solid #ef4444 !important;
+}
+
+/* ===================== TELA DE CONFIGURAÇÃO ===================== */
+.svm-config-preview {
+    display: inline-block; padding: 6px 12px;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    min-height: 40px; line-height: 34px;
+}
+.svm-inline-check { display: inline-block; margin-right: 14px; font-weight: normal; }
+
+/* Bloco de imagem do ícone no formulário de configuração */
+.svm-icon-current {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; margin-bottom: 8px;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+}
+.svm-icon-current img {
+    height: 40px; width: auto; max-width: 80px;
+    background: #fff; border-radius: 6px; padding: 2px;
+}
+.svm-icon-file { max-width: 100%; font-size: 12px; }
+
+/* ===================== PAINEL DE INDICADORES ===================== */
+.svm-dash { margin-top: 12px; }
+
+.svm-dash h3 {
+    font-size: 15px; font-weight: 600; color: #1e293b;
+    margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;
+}
+
+.svm-section-title {
+    font-size: 16px; font-weight: 600; color: #1e293b;
+    margin: 26px 0 10px;
+}
+
+/* --- Filtros --- */
+.svm-filters {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px;
+}
+.svm-filter { display: flex; flex-direction: column; gap: 4px; }
+.svm-filter > label {
+    font-size: 11px; font-weight: 600; color: #64748b;
+    text-transform: uppercase; letter-spacing: .03em;
+}
+.svm-filter-actions { flex-direction: row; align-items: center; gap: 6px; }
+
+/* --- Cards de KPI --- */
+.svm-kpis {
+    display: grid; gap: 12px; margin-bottom: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.svm-kpi {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 14px 16px; border-left: 4px solid #cbd5e1;
+}
+.svm-kpi-label {
+    font-size: 11px; font-weight: 600; color: #64748b;
+    text-transform: uppercase; letter-spacing: .03em;
+}
+.svm-kpi-value {
+    font-size: 28px; font-weight: 600; color: #1e293b;
+    line-height: 1.2; margin-top: 4px;
+}
+.svm-kpi-hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+.svm-kpi.svm-kpi-great { border-left-color: #16a34a; }
+.svm-kpi.svm-kpi-great .svm-kpi-value { color: #15803d; }
+.svm-kpi.svm-kpi-ok    { border-left-color: #f59e0b; }
+.svm-kpi.svm-kpi-ok    .svm-kpi-value { color: #b45309; }
+.svm-kpi.svm-kpi-bad   { border-left-color: #dc2626; }
+.svm-kpi.svm-kpi-bad   .svm-kpi-value { color: #b91c1c; }
+
+/* Cores aplicadas a texto avulso */
+td.svm-kpi-great, .svm-bar-val.svm-kpi-great { color: #15803d; }
+td.svm-kpi-ok,    .svm-bar-val.svm-kpi-ok    { color: #b45309; }
+td.svm-kpi-bad,   .svm-bar-val.svm-kpi-bad   { color: #b91c1c; }
+td.svm-kpi-none,  .svm-bar-val.svm-kpi-none  { color: #94a3b8; }
+
+/* --- Painéis --- */
+.svm-panel {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 16px;
+}
+.svm-panel-alert { border-color: #fecaca; background: #fffbfb; }
+.svm-empty { color: #94a3b8; font-size: 13px; margin: 0; }
+.svm-note { font-size: 11px; color: #94a3b8; margin: 10px 0 0; line-height: 1.5; }
+
+/* --- Barra horizontal --- */
+.svm-bar {
+    background: #f1f5f9; border-radius: 6px; height: 10px;
+    overflow: hidden; min-width: 80px;
+}
+.svm-bar > span {
+    display: block; height: 100%; border-radius: 6px;
+    background: #64748b; transition: width .3s;
+}
+.svm-bar > span.svm-kpi-great { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.svm-bar > span.svm-kpi-ok    { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.svm-bar > span.svm-kpi-bad   { background: linear-gradient(90deg, #f87171, #dc2626); }
+.svm-bar-val { font-size: 12px; font-weight: 600; margin-left: 2px; }
+
+/* --- Tabelas de ranking --- */
+.svm-rank { width: 100%; border-collapse: collapse; font-size: 13px; }
+.svm-rank th {
+    text-align: left; font-size: 11px; font-weight: 600; color: #64748b;
+    text-transform: uppercase; letter-spacing: .03em;
+    padding: 6px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+}
+.svm-rank td {
+    padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+}
+.svm-rank tr:last-child td { border-bottom: none; }
+.svm-rank tr:hover td { background: #f8fafc; }
+.svm-rank .svm-num { text-align: right; white-space: nowrap; }
+.svm-rank .svm-rank-pos { width: 56px; white-space: nowrap; color: #64748b; }
+.svm-rank .svm-bar-col { min-width: 160px; }
+.svm-rank-last td { background: #fffbfb; }
+.svm-comment {
+    max-width: 320px; font-size: 12px; color: #475569;
+    overflow: hidden; text-overflow: ellipsis;
+}
+
+.svm-small-sample { margin-top: 12px; }
+.svm-small-sample > summary {
+    cursor: pointer; font-size: 12px; color: #64748b; padding: 4px 0;
+}
+
+/* --- Distribuição --- */
+.svm-dist { width: 100%; border-collapse: collapse; font-size: 13px; }
+.svm-dist td { padding: 5px 10px; }
+.svm-dist-score {
+    width: 36px; text-align: center; font-weight: 600; color: #1e293b;
+    background: #f8fafc; border-radius: 6px;
+}
+.svm-dist-bar { width: 100%; }
+.svm-dist-pct { color: #64748b; width: 60px; }
+
+/* --- Barra empilhada do NPS --- */
+.svm-stack {
+    display: flex; height: 28px; border-radius: 8px;
+    overflow: hidden; background: #f1f5f9;
+}
+.svm-stack > span {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: #fff; min-width: 0;
+}
+.svm-stack-bad  { background: #dc2626; }
+.svm-stack-mid  { background: #f59e0b; }
+.svm-stack-good { background: #16a34a; }
+
+.svm-legend {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-top: 10px; font-size: 12px; color: #475569;
+}
+.svm-dot {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 50%; margin-right: 6px;
+}
+.svm-dot-bad  { background: #dc2626; }
+.svm-dot-mid  { background: #f59e0b; }
+.svm-dot-good { background: #16a34a; }
+
+/* --- Tendência mensal (colunas verticais) --- */
+.svm-trend {
+    display: flex; align-items: flex-end; gap: 8px;
+    overflow-x: auto; padding-bottom: 4px;
+}
+.svm-trend-col {
+    flex: 1 1 0; min-width: 46px; text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+}
+.svm-trend-value { font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+.svm-trend-bar {
+    width: 100%; height: 120px; background: #f8fafc;
+    border-radius: 6px 6px 0 0; display: flex; align-items: flex-end;
+    overflow: hidden;
+}
+.svm-trend-bar > span {
+    width: 100%; background: #64748b; border-radius: 6px 6px 0 0;
+    transition: height .3s;
+}
+.svm-trend-bar > span.svm-kpi-great { background: linear-gradient(180deg, #22c55e, #16a34a); }
+.svm-trend-bar > span.svm-kpi-ok    { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.svm-trend-bar > span.svm-kpi-bad   { background: linear-gradient(180deg, #f87171, #dc2626); }
+.svm-trend-label {
+    font-size: 10px; color: #64748b; margin-top: 5px;
+    border-top: 1px solid #e2e8f0; width: 100%; padding-top: 4px;
+}
+.svm-trend-count { font-size: 10px; color: #94a3b8; }
+
+@media (max-width: 720px) {
+    .svm-filters { gap: 10px; }
+    .svm-kpi-value { font-size: 22px; }
+    .svm-comment { max-width: 140px; }
+    .svm-rank { font-size: 12px; }
+}
+
+/* ===================== RESPONSIVO ===================== */
+@media (max-width: 640px) {
+    .svm-glass-container { padding: 22px 18px; border-radius: 20px; }
+    .svm-header h2 { font-size: 18px; }
+    .svm-scale { gap: 6px; }
+    .svm-emoji-on, .svm-emoji-off { font-size: 26px; }
+    .svm-nps .svm-num { min-width: 26px; height: 26px; font-size: 12px; }
+    .svm-actions { flex-direction: column-reverse; }
+    .svm-btn-secondary, #svm-btn { width: 100%; }
+    #svm-quick-view { height: 260px; }
+}
