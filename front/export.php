@@ -18,13 +18,37 @@ if (!PluginSvmProfile::canExportReports()) {
 $filters = PluginSvmReport::readFilters($_GET);
 $data    = PluginSvmReport::collect($filters);
 
-$filename = 'svm_pesquisas_' . date('Ymd_His') . '.csv';
+$format = ($_GET['format'] ?? 'csv') === 'json' ? 'json' : 'csv';
 
 while (ob_get_level() > 0) {
     if (!@ob_end_clean()) {
         break;
     }
 }
+
+// ----------------------------------------------------------------------
+// JSON — para Power BI, Grafana, scripts etc.
+// ----------------------------------------------------------------------
+// Autenticado por sessão: uma ferramenta externa precisa de um cookie de
+// sessão válido, ou do API REST do GLPI. Não há token próprio aqui de
+// propósito — seria mais uma superfície de autenticação para manter.
+if ($format === 'json') {
+    header('Content-Type: application/json; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+
+    if (!empty($_GET['download'])) {
+        header('Content-Disposition: attachment; filename="svm_indicadores_'
+               . date('Ymd_His') . '.json"');
+    }
+
+    echo json_encode(
+        PluginSvmReport::toArray($data),
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
+    exit;
+}
+
+$filename = 'svm_pesquisas_' . date('Ymd_His') . '.csv';
 
 header('Content-Type: text/csv; charset=UTF-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');

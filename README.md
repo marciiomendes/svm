@@ -1,9 +1,93 @@
-# SVM 3.1 — Permissionamento, Configuração e Indicadores
+# SVM — Gestão de Valor de Serviços
+
+Pesquisa de satisfação para GLPI 10, com CSAT e NPS, permissionamento por perfil e painel gerencial.
+
+**Versão:** 3.1.0 · **Requer:** GLPI 10.0+ · **Estado:** em homologação
 
 > **Para aplicar uma atualização:** substitua a pasta do plugin e vá em
 > *Configurar → Plugins → Atualizar* na linha do SVM. É esse botão que roda a
 > migração do banco. Se a tela não mudar, reinicie o PHP (OPcache).
 > Em caso de dúvida, acesse `/plugins/svm/front/diag.php`.
+
+---
+
+## Para que serve
+
+Transformar o encerramento de chamados em dado de satisfação confiável e acionável — e devolver isso à gestão em formato de decisão, não de planilha.
+
+O problema não é "coletar notas". É que, na maioria das operações de suporte, a percepção do usuário só aparece em reclamação escalada — quando já custou caro. O SVM antecipa esse sinal, atribui a um técnico, grupo e categoria, e o coloca na frente de quem pode agir.
+
+## Por que usar, tendo a pesquisa nativa do GLPI
+
+O GLPI já traz uma pesquisa: **uma** pergunta, escala de 0 a 5 estrelas, comentário livre, disparo por percentual de chamados, configuração por entidade. Para operações pequenas, isso pode bastar.
+
+O SVM entra quando a operação precisa de:
+
+| Necessidade | Nativo | SVM |
+|---|---|---|
+| Perguntas | 1 fixa | configuráveis, com peso e ordem |
+| Escala | 0-5 fixa | 1-3, 1-5, 1-7, 1-10, NPS 0-10, binária ou própria |
+| Aparência | estrelas | emoji, Font Awesome, imagem própria (upload) ou números |
+| Obrigatoriedade | não existe | 4 níveis, de voluntário a bloqueio do sistema |
+| Justificativa em nota baixa | não | obrigatória, validada no servidor |
+| NPS | não | pergunta separada, com intervalo próprio |
+| Ranking por técnico/grupo/categoria | não | painel com amostra mínima |
+| Fila de detratores | não | lista com link ao chamado e comentário |
+| Permissão granular | não | 5 direitos independentes por perfil |
+
+O ponto central não é a contagem de recursos, é a **taxa de resposta**. Pesquisa voluntária em suporte interno costuma ficar abaixo de 15%, e amostra pequena e enviesada não sustenta decisão. O SVM permite tornar a resposta obrigatória de forma graduada — com o cuidado de não travar ninguém por acidente.
+
+## O que ele faz
+
+**Coleta** — modal em etapas com prévia do chamado; perguntas de escala, NPS, texto ou Sim/Não; escala de carinhas (um emoji por nota) ou ícone repetido; justificativa obrigatória em nota baixa; adiamento opcional com limite.
+
+**Configuração** — uma configuração por entidade, com herança; ícone por upload ou URL; gatilho por chamado encerrado, a cada N encerrados ou manual; carência e expiração; todos os textos editáveis.
+
+**Governança** — cinco direitos independentes por perfil; restrição de entidade respeitada em toda consulta.
+
+**Análise** — KPIs de CSAT, nota média, NPS e detratores; tendência mensal; distribuição das notas; ranking por técnico, grupo e categoria; fila de follow-up; exportação CSV.
+
+## Oportunidades de uso
+
+**Recuperação de detratores.** A fila de follow-up serve a uma prática específica: contato individual em até 48h com quem avaliou mal. É o uso com retorno mais direto — transforma insatisfação registrada em problema resolvido.
+
+**Diagnóstico por categoria.** CSAT baixo concentrado numa categoria raramente é problema de atendimento; costuma ser processo, documentação ou ferramenta. O ranking separa uma coisa da outra.
+
+**Necessidade de treinamento.** Padrão consistente por técnico, com amostra suficiente, indica onde investir em capacitação.
+
+**Reconhecimento.** Satisfação é um dos poucos indicadores de suporte que mede resultado percebido, não esforço. Serve para reconhecer bem.
+
+**Complemento ao SLA.** SLA mede prazo cumprido; CSAT mede se a entrega resolveu. Chamado no prazo com nota baixa é exatamente o caso que o SLA não captura.
+
+**Governança.** Evidência de medição contínua de satisfação, com histórico e responsáveis — útil em ITIL e ISO 20000.
+
+## Decisões que afetam a leitura dos números
+
+**CSAT e NPS não se misturam.** CSAT mede o atendimento pontual; NPS mede lealdade ao suporte. Somar os dois numa média produz um número sem significado. São calculados separadamente.
+
+**CSAT agregado é soma de satisfeitas ÷ soma de respostas**, não média de percentuais. Média de médias daria o mesmo peso a uma pesquisa de uma pergunta e a uma de três.
+
+**Amostra pequena fica fora do ranking.** Com duas respostas só existem 0%, 50% e 100% — alguém "lidera" ou "afunda" por acidente. O mínimo é configurável e os casos abaixo dele são listados à parte.
+
+O padrão de instalação é **não bloqueante**: o bloqueio é opt-in, e perfis com direito de configuração ficam isentos automaticamente, para que um ajuste equivocado nunca tranque quem precisa entrar e corrigir.
+
+## Limites conhecidos
+
+- **Em homologação** — não validado em produção com volume real.
+- **Obrigatoriedade cobra um preço.** Bloquear aumenta a taxa de resposta e incomoda. Comece em `reminder` e endureça só se necessário.
+- **Fadiga de pesquisa.** Acima de 5 perguntas ativas a taxa de resposta cai muito; a tela avisa.
+- **Anonimato é escolha excludente** — aumenta a sinceridade e impede o follow-up individual.
+- **Chamado com vários técnicos** conta para cada um, então a soma por técnico pode exceder o total.
+- **`is_anonymous` ainda não filtra a exibição** para o técnico: o campo existe, o comportamento está pendente.
+
+## Referências de leitura dos indicadores
+
+- **CSAT:** 70-85% é bom; acima de 85% é excepcional e difícil de sustentar.
+- **NPS:** acima de 50 é excelente; 70+ é classe mundial. Faixas: 0-6 detrator, 7-8 neutro, 9-10 promotor.
+
+---
+
+# Configuração
 
 ## 1. Direitos por perfil
 
@@ -95,10 +179,34 @@ Em *Assistência → Pesquisas de satisfação*. Exige `plugin_svm_report` READ;
 
 **Visão sintética**
 
-- Seis KPIs: pesquisas respondidas, CSAT, nota média, NPS, detratores e quantidade com comentário.
+- **Termômetros** de CSAT, NPS e nota média: arcos SVG com as faixas de referência pintadas ao fundo, para leitura imediata de "onde estamos".
+- KPIs de pesquisas, respostas, detratores e comentários.
 - Composição do NPS em barra empilhada (detratores / neutros / promotores).
-- Tendência mensal do CSAT, com a contagem de pesquisas de cada mês abaixo da barra — mês com pouca resposta oscila mais, e isso fica visível.
-- Distribuição das notas individuais. Uma distribuição em U (muitas notas extremas) revela experiências inconsistentes, algo que a média esconde.
+- **Tendência do CSAT** em gráfico de linha com tooltip ao passar o mouse, faixas de 70% e 85% marcadas e a contagem de pesquisas sob cada mês — mês com pouca resposta oscila mais, e isso fica visível.
+- Distribuição das notas em colunas. Uma distribuição em U (muitas notas extremas) revela experiências inconsistentes, algo que a média esconde.
+
+**Interatividade**
+
+- **Pódio** nas três abas: 2º-1º-3º com degraus de altura proporcional, coroa no primeiro, foto do GLPI (ou iniciais coloridas) e o CSAT em destaque. Grupos e categorias usam iniciais.
+- **Detalhamento em um clique:** clicar na foto ou no nome — no pódio ou na tabela — abre um modal com os chamados avaliados daquele técnico, grupo ou categoria, cada um com a **nota de cada pergunta** em pastilhas coloridas, CSAT, NPS, comentário e link para o chamado. A tabela do modal também é ordenável.
+- **Drill-down:** o ícone de filtro na linha recarrega o painel inteiro recortado por aquele item. Os filtros ativos aparecem como chips removíveis.
+- **Tabelas ordenáveis** por qualquer coluna (clique no cabeçalho).
+- **Copiar tabela** em um clique, no formato TSV — cola direto no Excel ou Sheets.
+
+**Densidade: tudo numa tela**
+
+O painel é organizado para caber numa tela sem rolagem (≈870px de altura em desktop):
+
+| Faixa | Conteúdo |
+|---|---|
+| 1 | Barra de controles — todos os filtros numa linha, chips e exportação |
+| 2 | Três termômetros + números + composição do NPS |
+| 3 | Tendência e distribuição lado a lado |
+| 4 | Rankings em **abas** (técnico / grupo / categoria) |
+
+Duas decisões que sustentam isso: os três rankings viram abas em vez de empilhar, e as tabelas longas **rolam por dentro** do painel em vez de empurrar a página — nenhum dado fica inacessível. A fila de detratores e a visão analítica ficam recolhidas, com a contagem visível no título.
+
+Tudo em SVG e CSS próprios: sem biblioteca externa, sem CDN, funciona offline. As abas são CSS puro (radio + label) e os gráficos são gerados no servidor, então o painel funciona sem JavaScript — o JS só acrescenta tooltip, ordenação e cópia.
 
 **Rankings** por técnico, grupo e categoria, com pesquisas, CSAT, nota média, NPS e detratores. Três cuidados deliberados:
 
@@ -108,9 +216,11 @@ Em *Assistência → Pesquisas de satisfação*. Exige `plugin_svm_report` READ;
 
 **Fila de follow-up:** detratores de NPS ou pesquisas com menos de 50% de respostas satisfeitas, com link para o chamado, técnico e comentário — para o contato em até 48h.
 
-**Exportação CSV** (`plugin_svm_report` + direito de exportar) com resumo, consolidados, tendência e analítico. Separador `;` e decimal `,` para o Excel pt-BR; células iniciadas por `=`, `+`, `-` ou `@` são neutralizadas contra injeção de fórmula.
+**Exportação** (`plugin_svm_report` + direito de exportar):
 
-Os gráficos são HTML/CSS puro — sem biblioteca externa, funciona offline.
+- **CSV** com resumo, consolidados por técnico/grupo/categoria, tendência e analítico. Separador `;` e decimal `,` para o Excel pt-BR; células iniciadas por `=`, `+`, `-` ou `@` são neutralizadas contra injeção de fórmula.
+- **JSON** em `export.php?format=json`, com o consolidado pronto para Power BI, Grafana ou script. A autenticação é por sessão do GLPI — uma ferramenta externa precisa de cookie válido ou do API REST; não há token próprio de propósito, para não manter mais uma superfície de autenticação.
+- **Copiar** cada tabela como TSV, para colar em planilha.
 
 ## 5. Migração da v2.1.0
 
@@ -137,6 +247,7 @@ front/export.php           exportação CSV dos indicadores
 front/diag.php             diagnóstico de instalação (pode apagar)
 inc/report.class.php       agregação dos indicadores do painel
 ajax/process.php           check / save / skip
+ajax/detail.php            detalhamento por técnico, grupo ou categoria
 js/enforce.js              modal montado a partir da configuração
 css/styles.css             estilos
 ```

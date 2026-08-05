@@ -207,9 +207,13 @@ class PluginSvmReport extends CommonGLPI
             'totals'       => self::aggregate($rows),
             'timeline'     => self::buildTimeline($rows),
             'distribution' => self::buildDistribution($rows),
-            'by_tech'      => self::groupBy($rows, $techs, 'tickets_id'),
-            'by_group'     => self::groupBy($rows, $groups, 'tickets_id'),
-            'by_category'  => self::groupByScalar($rows, 'itilcategories_id', $categories),
+            // Avatar em todas as dimensões: técnico usa a foto do GLPI,
+            // grupo e categoria caem nas iniciais coloridas do próprio nome.
+            'by_tech'      => self::withAvatars(self::groupBy($rows, $techs, 'tickets_id'), true),
+            'by_group'     => self::withAvatars(self::groupBy($rows, $groups, 'tickets_id')),
+            'by_category'  => self::withAvatars(
+                                  self::groupByScalar($rows, 'itilcategories_id', $categories)
+                              ),
             'detractors'   => self::listDetractors($rows, $techs),
             'rows'         => $rows,
         ];
@@ -333,7 +337,10 @@ class PluginSvmReport extends CommonGLPI
     // Consultas auxiliares
     // ==================================================================
 
-    /** [tickets_id => [users_id => nome]] dos técnicos atribuídos. */
+    /**
+     * [tickets_id => [users_id => nome]] dos técnicos atribuídos.
+     * Preenche também self::$avatars com foto/iniciais de cada técnico.
+     */
     private static function loadAssignedUsers(array $ticket_ids): array {
         global $DB;
 
@@ -346,7 +353,7 @@ class PluginSvmReport extends CommonGLPI
             'SELECT' => [
                 'tu.tickets_id',
                 'u.id AS users_id',
-                'u.name', 'u.realname', 'u.firstname',
+                'u.name', 'u.realname', 'u.firstname', 'u.picture',
             ],
             'FROM'       => 'glpi_tickets_users AS tu',
             'INNER JOIN' => [
@@ -357,14 +364,144 @@ class PluginSvmReport extends CommonGLPI
                 'tu.type'       => CommonITILActor::ASSIGN,
             ],
         ]) as $row) {
-            $label = trim(($row['realname'] ?? '') . ' ' . ($row['firstname'] ?? ''));
-            if ($label === '') {
-                $label = (string)$row['name'];
+            $users_id = (int)$row['users_id'];
+            $label    = self::formatUser($row);
+
+            $out[(int)$row['tickets_id']][$users_id] = $label;
+
+            if (!isset(self::$avatars[$users_id])) {
+                self::$avatars[$users_id] = self::buildAvatar($label, $row['picture'] ?? null);
             }
-            $out[(int)$row['tickets_id']][(int)$row['users_id']] = $label;
         }
 
         return $out;
+    }
+
+    /** Cache de avatares por users_id, preenchido em loadAssignedUsers(). */
+    private static $avatars = [];
+
+    /**
+     * Nome do técnico no formato configurado no GLPI.
+     *
+     * Concatenar "realname firstname" à mão produzia nomes invertidos
+     * ("SOBRENOME NOME") em instalações que usam Nome antes do Sobrenome.
+     * formatUserName() respeita a preferência de exibição do GLPI, então o
+     * painel mostra o nome igual ao resto do sistema.
+     *
+     * @param array $row precisa de users_id, name, realname e firstname
+     */
+    private static function formatUser(array $row): string {
+        if (function_exists('formatUserName')) {
+            $label = (string)formatUserName(
+                (int)($row['users_id'] ?? 0),
+                (string)($row['name'] ?? ''),
+                (string)($row['realname'] ?? ''),
+                (string)($row['firstname'] ?? '')
+            );
+
+            if (trim($label) !== '') {
+                return $label;
+            }
+        }
+
+        // Reserva: nome antes do sobrenome, a leitura natural em pt-BR.
+        $label = trim(
+            trim((string)($row['firstname'] ?? '')) . ' '
+            . trim((string)($row['realname'] ?? ''))
+        );
+
+        return $label !== '' ? $label : (string)($row['name'] ?? '');
+    }
+
+    /**
+     * Avatar do técnico: foto do GLPI quando existe, senão iniciais com
+     * cor derivada do nome (determinística, então a mesma pessoa mantém
+     * sempre a mesma cor).
+     */
+    private static function buildAvatar(string $label, ?string $picture): array {
+        return [
+            'url'      => self::pictureUrl($picture),
+            'initials' => self::initials($label),
+            'hue'      => self::hueFromString($label),
+        ];
+    }
+
+    /**
+     * URL da foto de um usuário.
+     *
+     * O GLPI grava em glpi_users.picture o caminho relativo
+     * "{2 hex}/{id}_{uniqid}.{ext}" dentro de GLPI_PICTURE_DIR, e cria ao
+     * lado um "_min" com a miniatura. A entrega é feita por
+     * front/document.send.php?file=_pictures/{caminho}, que exige sessão.
+     *
+     * A URL é montada aqui em vez de chamada de um helper do core porque o
+     * nome desse helper variou entre versões e algumas variantes devolvem
+     * caminho relativo sem o root_doc — o que renderizaria imagem quebrada.
+     */
+    private static function pictureUrl(?string $picture): ?string {
+        global $CFG_GLPI;
+
+        $picture = trim((string)$picture);
+        if ($picture === '') {
+            return null;
+        }
+
+        // Aceita só o formato que o GLPI gera. Barra travessia de diretório
+        // e qualquer coisa inesperada no banco.
+        if (!preg_match('#^[0-9a-f]{2}/[A-Za-z0-9_\-]+\.(png|jpg|jpeg|gif|webp)$#i', $picture)) {
+            return null;
+        }
+
+        if (!defined('GLPI_PICTURE_DIR')) {
+            return null;
+        }
+
+        // Prefere a miniatura; cai para a original se ela não existir.
+        $ext   = pathinfo($picture, PATHINFO_EXTENSION);
+        $thumb = preg_replace('/\.' . preg_quote($ext, '/') . '$/i', '_min.' . $ext, $picture);
+
+        $chosen = null;
+        foreach ([$thumb, $picture] as $candidate) {
+            if ($candidate !== null && is_file(GLPI_PICTURE_DIR . '/' . $candidate)) {
+                $chosen = $candidate;
+                break;
+            }
+        }
+
+        if ($chosen === null) {
+            return null;
+        }
+
+        $root = $CFG_GLPI['root_doc'] ?? '';
+
+        return $root . '/front/document.send.php?file=_pictures/' . $chosen;
+    }
+
+    /** Até duas iniciais do nome. */
+    private static function initials(string $label): string {
+        $parts = preg_split('/\s+/u', trim($label), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if (empty($parts)) {
+            return '?';
+        }
+
+        $first = mb_strtoupper(mb_substr($parts[0], 0, 1));
+        if (count($parts) === 1) {
+            return $first;
+        }
+
+        $last = mb_strtoupper(mb_substr($parts[count($parts) - 1], 0, 1));
+        return $first . $last;
+    }
+
+    /** Matiz estável (0-359) a partir do nome. */
+    private static function hueFromString(string $value): int {
+        return (int)(crc32($value) % 360);
+    }
+
+    /** Avatar de um técnico já carregado. */
+    public static function getAvatar(int $users_id): ?array {
+        return self::$avatars[$users_id] ?? null;
     }
 
     /** [tickets_id => [groups_id => nome]] dos grupos atribuídos. */
@@ -525,6 +662,259 @@ class PluginSvmReport extends CommonGLPI
         }
 
         return self::finishBuckets($buckets);
+    }
+
+    /**
+     * Acrescenta o avatar a cada bucket.
+     *
+     * @param bool $with_photo procura a foto do usuário (só faz sentido na
+     *                         dimensão de técnico)
+     */
+    private static function withAvatars(array $buckets, bool $with_photo = false): array {
+        foreach ($buckets as &$bucket) {
+            $fallback = [
+                'url'      => null,
+                'initials' => self::initials((string)$bucket['label']),
+                'hue'      => self::hueFromString((string)$bucket['label']),
+            ];
+
+            $bucket['avatar'] = $with_photo
+                ? (self::getAvatar((int)$bucket['id']) ?? $fallback)
+                : $fallback;
+        }
+        unset($bucket);
+
+        return $buckets;
+    }
+
+    // ==================================================================
+    // Detalhamento
+    // ==================================================================
+
+    /** Dimensões que podem ser detalhadas, e a chave de filtro de cada uma. */
+    public static function getDimensions(): array {
+        return [
+            'tech'     => ['filter' => 'tech',     'label' => __('Técnico')],
+            'group'    => ['filter' => 'group',    'label' => __('Grupo')],
+            'category' => ['filter' => 'category', 'label' => __('Categoria')],
+        ];
+    }
+
+    /**
+     * Notas por pergunta das pesquisas informadas.
+     *
+     * @return array [plugin_svm_surveys_id => [ ['name','type','value'], ... ]]
+     */
+    public static function loadAnswers(array $survey_ids): array {
+        global $DB;
+
+        $out = [];
+        if (empty($survey_ids)) {
+            return $out;
+        }
+
+        foreach (array_chunk(array_map('intval', $survey_ids), 2000) as $chunk) {
+            foreach ($DB->request([
+                'SELECT' => [
+                    'a.plugin_svm_surveys_id',
+                    'a.answer_int',
+                    'a.answer_text',
+                    'q.name AS question_name',
+                    'q.question_type',
+                    'q.rank',
+                ],
+                'FROM'      => 'glpi_plugin_svm_answers AS a',
+                'LEFT JOIN' => [
+                    'glpi_plugin_svm_questions AS q' => [
+                        'ON' => ['a' => 'plugin_svm_questions_id', 'q' => 'id'],
+                    ],
+                ],
+                'WHERE' => ['a.plugin_svm_surveys_id' => $chunk],
+                'ORDER' => ['a.plugin_svm_surveys_id', 'q.rank'],
+            ]) as $row) {
+                $out[(int)$row['plugin_svm_surveys_id']][] = [
+                    'name'  => self::plainText((string)($row['question_name'] ?? '')),
+                    'type'  => (string)($row['question_type'] ?? ''),
+                    'value' => (int)$row['answer_int'],
+                    'text'  => self::plainText((string)($row['answer_text'] ?? '')),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Notas das colunas legadas, para os registros anteriores à 3.0.0 que
+     * não têm linha em _answers.
+     */
+    public static function legacyAnswers(array $row): array {
+        $map = [
+            'score_value' => __('Valor agregado da solução', 'svm'),
+            'score_tech'  => __('Cordialidade e conhecimento técnico', 'svm'),
+            'score_speed' => __('Tempo de atendimento', 'svm'),
+        ];
+
+        $out = [];
+        foreach ($map as $field => $label) {
+            $v = (int)($row[$field] ?? 0);
+            if ($v > 0) {
+                $out[] = ['name' => $label, 'type' => 'scale', 'value' => $v, 'text' => ''];
+            }
+        }
+
+        return $out;
+    }
+
+    // ==================================================================
+    // Drill-down
+    // ==================================================================
+
+    /**
+     * URL do próprio painel com um filtro acrescentado ou trocado.
+     * Permite clicar num técnico e ver todo o painel recortado por ele.
+     */
+    public static function drillUrl(array $filters, string $key, $value): string {
+        $params = [
+            'period'     => (int)$filters['period'],
+            'min_sample' => (int)$filters['min_sample'],
+        ];
+
+        // Preserva os filtros vigentes
+        if ($filters['entities_id'] !== null)       { $params['svm_entity'] = (int)$filters['entities_id']; }
+        if ($filters['itilcategories_id'] !== null) { $params['category']   = (int)$filters['itilcategories_id']; }
+        if ($filters['tech_id'] !== null)           { $params['tech']       = (int)$filters['tech_id']; }
+        if ($filters['group_id'] !== null)          { $params['group']      = (int)$filters['group_id']; }
+
+        if ($value === null) {
+            unset($params[$key]);
+        } else {
+            $params[$key] = $value;
+        }
+
+        return 'survey.php?' . http_build_query($params);
+    }
+
+    /** Filtros ativos, para exibir como chips removíveis. */
+    public static function activeChips(array $filters): array {
+        $chips = [];
+
+        if ($filters['tech_id'] !== null) {
+            $user  = new User();
+            $value = '#' . (int)$filters['tech_id'];
+
+            if ($user->getFromDB($filters['tech_id'])) {
+                $value = method_exists($user, 'getFriendlyName')
+                    ? $user->getFriendlyName()
+                    : (string)($user->fields['name'] ?? $value);
+            }
+
+            $chips[] = [
+                'key'   => 'tech',
+                'label' => __('Técnico'),
+                'value' => $value,
+            ];
+        }
+
+        if ($filters['group_id'] !== null) {
+            $group = new Group();
+            $chips[] = [
+                'key'   => 'group',
+                'label' => __('Grupo'),
+                'value' => $group->getFromDB($filters['group_id'])
+                           ? $group->fields['name']
+                           : ('#' . (int)$filters['group_id']),
+            ];
+        }
+
+        if ($filters['itilcategories_id'] !== null) {
+            $cat = new ITILCategory();
+            $chips[] = [
+                'key'   => 'category',
+                'label' => __('Categoria'),
+                'value' => $cat->getFromDB($filters['itilcategories_id'])
+                           ? $cat->fields['completename']
+                           : ('#' . (int)$filters['itilcategories_id']),
+            ];
+        }
+
+        if ($filters['entities_id'] !== null) {
+            $entity = new Entity();
+            $chips[] = [
+                'key'   => 'svm_entity',
+                'label' => __('Entidade'),
+                'value' => $entity->getFromDB($filters['entities_id'])
+                           ? $entity->fields['completename']
+                           : ('#' . (int)$filters['entities_id']),
+            ];
+        }
+
+        return $chips;
+    }
+
+    // ==================================================================
+    // Serialização para ferramentas externas
+    // ==================================================================
+
+    /**
+     * Texto sem as entidades HTML que o GLPI grava no banco. No JSON o
+     * consumidor espera "R&M", não "R&#38;M".
+     */
+    public static function plainText(string $value): string {
+        if (class_exists('Glpi\\Toolbox\\Sanitizer')) {
+            return \Glpi\Toolbox\Sanitizer::unsanitize($value);
+        }
+        return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Estrutura enxuta para consumo em Power BI, Grafana, Sheets etc.
+     * Sem avatares nem linhas cruas: só o consolidado.
+     */
+    public static function toArray(array $data): array {
+        $dimension = static function (array $buckets): array {
+            $out = [];
+            foreach ($buckets as $b) {
+                $out[] = [
+                    'id'           => (int)$b['id'],
+                    'nome'         => self::plainText((string)$b['label']),
+                    'pesquisas'    => (int)$b['metrics']['surveys'],
+                    'respostas'    => (int)$b['metrics']['answers'],
+                    'csat_percent' => $b['metrics']['csat_percent'],
+                    'nota_media'   => $b['metrics']['csat_avg'],
+                    'nps'          => $b['metrics']['nps'],
+                    'promotores'   => (int)$b['metrics']['promoters'],
+                    'neutros'      => (int)$b['metrics']['passives'],
+                    'detratores'   => (int)$b['metrics']['detractors'],
+                ];
+            }
+            return $out;
+        };
+
+        return [
+            'gerado_em' => date('c'),
+            'filtros'   => [
+                'periodo_dias' => (int)$data['filters']['period'],
+                'entidade'     => $data['filters']['entities_id'],
+                'categoria'    => $data['filters']['itilcategories_id'],
+                'tecnico'      => $data['filters']['tech_id'],
+                'grupo'        => $data['filters']['group_id'],
+                'amostra_min'  => (int)$data['filters']['min_sample'],
+            ],
+            'truncado'  => (bool)$data['truncated'],
+            'total'     => $data['totals'],
+            'tendencia' => array_map(static fn($p) => [
+                'mes'          => $p['month'],
+                'pesquisas'    => (int)$p['metrics']['surveys'],
+                'csat_percent' => $p['metrics']['csat_percent'],
+                'nota_media'   => $p['metrics']['csat_avg'],
+                'nps'          => $p['metrics']['nps'],
+            ], $data['timeline']),
+            'distribuicao' => $data['distribution'],
+            'por_tecnico'  => $dimension($data['by_tech']),
+            'por_grupo'    => $dimension($data['by_group']),
+            'por_categoria'=> $dimension($data['by_category']),
+        ];
     }
 
     /** Calcula os indicadores de cada bucket e ordena por CSAT. */
