@@ -4,7 +4,7 @@
  * Pesquisa de satisfação (CSAT / NPS) para chamados do GLPI 10.
  */
 
-define('PLUGIN_SVM_VERSION', '3.0.0');
+define('PLUGIN_SVM_VERSION', '3.1.0');
 define('PLUGIN_SVM_MIN_GLPI', '10.0.0');
 define('PLUGIN_SVM_MAX_GLPI', '11.0.99');
 
