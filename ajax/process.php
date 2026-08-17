@@ -42,6 +42,7 @@ function plugin_svm_token(): string {
 if ($action === 'check') {
     $data = PluginSvmSurvey::getSurveyData($users_id);
 
+    ob_clean();
     echo json_encode([
         'must_lock'    => (bool)$data['must_lock'],
         'show_prompt'  => (bool)($data['show_prompt'] ?? false),
@@ -61,6 +62,7 @@ if ($action === 'check') {
 // ----------------------------------------------------------------------
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
+    ob_clean();
     echo json_encode(['success' => false, 'message' => __('Método não permitido.', 'svm')]);
     exit;
 }
@@ -68,6 +70,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 $sent = (string)($_POST['svm_token'] ?? '');
 if ($sent === '' || !hash_equals(plugin_svm_token(), $sent)) {
     http_response_code(403);
+    ob_clean();
     echo json_encode([
         'success' => false,
         'message' => __('Token de segurança inválido. Recarregue a página.', 'svm'),
@@ -99,6 +102,7 @@ if ($action === 'save') {
         http_response_code(422);
     }
 
+    ob_clean();
     echo json_encode($result);
     exit;
 }
@@ -111,6 +115,7 @@ if ($action === 'skip') {
     if (!$result['success']) {
         http_response_code(422);
     }
+    ob_clean();
     echo json_encode($result);
     exit;
 }

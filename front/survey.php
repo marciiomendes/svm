@@ -314,7 +314,7 @@ function svm_rank_panel(
            . (int)$m['surveys'] . "</td>";
 
         echo "<td class='svm-bar-col' data-value='" . $csat . "'>";
-        echo "<div class='svm-bar'><span class='$cls' style='width:"
+        echo "<div class='svm-progress-bar'><span class='$cls' style='width:"
            . max(0, min(100, $csat)) . "%'></span></div>";
         echo "<span class='svm-bar-val $cls'>" . svm_num($csat, '%') . "</span></td>";
 

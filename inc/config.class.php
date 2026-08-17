@@ -512,6 +512,11 @@ class PluginSvmConfig extends CommonDBTM
             'target_statuses'          => '6',
             'justify_threshold'        => 3,
             'csat_satisfied_threshold' => 4,
+            'enforce_mode'             => 'reminder',
+            'trigger_type'             => 'closed_count',
+            'trigger_closed_count'     => 5,
+            'trigger_required_answers' => 1,
+            'pending_max_shown'        => 5,
         ];
 
         $bounds = self::getScaleBounds((string)$row['scale_type']);
@@ -1018,11 +1023,18 @@ class PluginSvmConfig extends CommonDBTM
             'value' => $this->fields['trigger_closed_count'], 'min' => 1, 'max' => 50,
         ]);
         echo "</td>";
+        echo "<td>" . __('Exigir N respostas ao disparar', 'svm') . "</td><td>";
+        Dropdown::showNumber('trigger_required_answers', [
+            'value' => $this->fields['trigger_required_answers'], 'min' => 1, 'max' => 20,
+        ]);
+        echo "</td></tr>";
+
+        echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Máx. de pesquisas pendentes exibidas', 'svm') . "</td><td>";
         Dropdown::showNumber('pending_max_shown', [
             'value' => $this->fields['pending_max_shown'], 'min' => 1, 'max' => 20,
         ]);
-        echo "</td></tr>";
+        echo "</td>";
 
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Carência após o encerramento (horas)', 'svm') . "</td><td>";

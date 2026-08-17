@@ -26,6 +26,10 @@
     // Utilidades
     // ------------------------------------------------------------------
 
+    function getCsrfToken() {
+        return (window.svm?.csrf_token || window.GLPI_CSRF_TOKEN || window._glpi_csrf_token || "").toString();
+    }
+
     /**
      * Escapa para uso seguro tanto em conteúdo quanto em atributo.
      * .text().html() do jQuery NÃO escapa aspas, e o Sanitizer do GLPI
@@ -421,7 +425,13 @@
             if (!tid) { return; }
 
             var btn = $(this).prop('disabled', true);
-            $.post(SVM.path, { action: 'skip', tickets_id: tid, svm_token: SVM.token })
+            var token = getCsrfToken();
+            $.ajax({
+                url: SVM.path,
+                type: 'POST',
+                data: { action: 'skip', tickets_id: tid, svm_token: SVM.token, _glpi_csrf_token: token },
+                headers: { 'X-GLPI-CSRF-TOKEN': token }
+            })
                 .done(function () { window.location.reload(); })
                 .fail(function (xhr) {
                     btn.prop('disabled', false);
@@ -590,12 +600,14 @@
             }
         }
 
+        var token = getCsrfToken();
         var payload = {
             action: 'save',
             tickets_id: tid,
             comment: comment,
             answers: answers,
-            svm_token: SVM.token
+            svm_token: SVM.token,
+            _glpi_csrf_token: token
         };
 
         var npsVal = $('#svm-nps-input').val();
@@ -605,7 +617,12 @@
 
         var $btn = $('#svm-btn').prop('disabled', true).text('Enviando...');
 
-        $.post(SVM.path, payload)
+        $.ajax({
+            url: SVM.path,
+            type: 'POST',
+            data: payload,
+            headers: { 'X-GLPI-CSRF-TOKEN': token }
+        })
             .done(function (res) {
                 if (res && res.success) {
                     SVM.isLocked = false;
@@ -678,14 +695,14 @@
 
         $('script[src]').each(function () {
             var s = this.getAttribute('src') || '';
-            if (s.indexOf('/svm/js/enforce.js') !== -1) {
+            if (s.indexOf('/svm/') !== -1 && s.indexOf('enforce.js') !== -1) {
                 src = s;
                 return false;
             }
         });
 
         if (src) {
-            return src.split('?')[0].replace(/\/js\/enforce\.js$/, '/ajax/process.php');
+            return src.split('?')[0].replace(/\/(public\/)?js\/enforce\.js$/, '/ajax/process.php');
         }
 
         return CFG_GLPI.root_doc + '/plugins/svm/ajax/process.php';

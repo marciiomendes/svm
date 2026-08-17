@@ -235,8 +235,17 @@ class PluginSvmProfile extends Profile
     public static function installRights() {
         global $DB;
 
-        $names = self::getRightNames();
-        ProfileRight::addProfileRights($names);
+        foreach (self::getRightNames() as $right) {
+            $count = $DB->request([
+                'COUNT' => 'cpt',
+                'FROM'  => 'glpi_profilerights',
+                'WHERE' => ['name' => $right],
+            ])->current();
+
+            if ((int)($count['cpt'] ?? 0) === 0) {
+                ProfileRight::addProfileRights([$right]);
+            }
+        }
 
         // Concede ao perfil do usuário que instalou (super-admin típico)
         // apenas os bits que cada direito realmente expõe na matriz. Ligar

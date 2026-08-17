@@ -63,6 +63,7 @@ function plugin_svm_install() {
             `enforce_mode`              VARCHAR(20)  NOT NULL DEFAULT 'reminder',
             `trigger_type`              VARCHAR(20)  NOT NULL DEFAULT 'closed_count',
             `trigger_closed_count`      SMALLINT UNSIGNED NOT NULL DEFAULT 5,
+            `trigger_required_answers`  TINYINT UNSIGNED NOT NULL DEFAULT 1,
             `pending_max_shown`         TINYINT UNSIGNED NOT NULL DEFAULT 5,
             `pending_grace_hours`       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
             `survey_expire_days`        SMALLINT UNSIGNED NOT NULL DEFAULT 30,
@@ -88,8 +89,9 @@ function plugin_svm_install() {
     } else {
         // Colunas acrescentadas depois da 3.0.0
         foreach ([
-            'icon_image_file'       => "VARCHAR(255) NOT NULL DEFAULT ''",
-            'icon_image_empty_file' => "VARCHAR(255) NOT NULL DEFAULT ''",
+            'icon_image_file'          => "VARCHAR(255) NOT NULL DEFAULT ''",
+            'icon_image_empty_file'    => "VARCHAR(255) NOT NULL DEFAULT ''",
+            'trigger_required_answers' => "TINYINT UNSIGNED NOT NULL DEFAULT 1",
         ] as $col => $def) {
             if (!$DB->fieldExists($t_config, $col)) {
                 $migration->addField($t_config, $col, $def);

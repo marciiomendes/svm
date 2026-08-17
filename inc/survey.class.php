@@ -102,10 +102,30 @@ class PluginSvmSurvey extends CommonDBTM
 
             case 'closed_count':
                 $step = max(1, (int)$config['trigger_closed_count']);
+                $req  = max(1, (int)($config['trigger_required_answers'] ?? 1));
+
+                $answered_at_milestone = 0;
+                if ($last_milestone > 0) {
+                    $answered_at_milestone = (int)($DB->request([
+                        'SELECT' => ['COUNT(*) as cpt'],
+                        'FROM'   => self::getTable(),
+                        'WHERE'  => [
+                            'users_id'              => $users_id,
+                            'plugin_svm_configs_id' => $configs_id,
+                            'answer_status'         => self::STATUS_ANSWERED,
+                            'total_at_last_survey'  => $last_milestone,
+                        ]
+                    ])->current()['cpt'] ?? 0);
+                }
+
                 if ($last_milestone === 0) {
                     $triggered = $total_ever >= $step;
                 } else {
-                    $triggered = $total_ever >= ($last_milestone + $step);
+                    if ($answered_at_milestone < $req) {
+                        $triggered = true;
+                    } else {
+                        $triggered = $total_ever >= ($last_milestone + $step);
+                    }
                 }
                 break;
 

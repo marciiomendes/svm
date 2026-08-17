@@ -381,6 +381,7 @@
     display: flex; flex-direction: column; gap: 3px;
     min-width: 0; flex: 0 0 auto; width: 165px;
 }
+.svm-bar-group > * { margin-bottom: 0 !important; }
 .svm-bar-period { width: 150px; }
 .svm-bar-group > label {
     font-size: 10px; font-weight: 600; color: #64748b;
@@ -716,11 +717,11 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.svm-bar { background: #f1f5f9; border-radius: 5px; height: 7px; overflow: hidden; min-width: 60px; }
-.svm-bar > span { display: block; height: 100%; border-radius: 5px; background: #64748b; }
-.svm-bar > span.svm-kpi-great { background: linear-gradient(90deg, #22c55e, #16a34a); }
-.svm-bar > span.svm-kpi-ok    { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-.svm-bar > span.svm-kpi-bad   { background: linear-gradient(90deg, #f87171, #dc2626); }
+.svm-progress-bar { background: #f1f5f9; border-radius: 5px; height: 7px; overflow: hidden; min-width: 60px; }
+.svm-progress-bar > span { display: block; height: 100%; border-radius: 5px; background: #64748b; }
+.svm-progress-bar > span.svm-kpi-great { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.svm-progress-bar > span.svm-kpi-ok    { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.svm-progress-bar > span.svm-kpi-bad   { background: linear-gradient(90deg, #f87171, #dc2626); }
 .svm-bar-val { font-size: 11px; font-weight: 600; }
 
 /* Botão que parece link: abre o detalhamento */
