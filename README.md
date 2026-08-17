@@ -2,7 +2,7 @@
 
 Pesquisa de satisfação para GLPI 10, com CSAT e NPS, permissionamento por perfil e painel gerencial.
 
-**Versão:** 3.1.0 · **Requer:** GLPI 10.0+ · **Estado:** em homologação
+**Versão:** 3.0.0 · **Requer:** GLPI 10.0+
 
 > **Para aplicar uma atualização:** substitua a pasta do plugin e vá em
 > *Configurar → Plugins → Atualizar* na linha do SVM. É esse botão que roda a
